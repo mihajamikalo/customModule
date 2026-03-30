@@ -43,7 +43,7 @@ $category = 'Other';
 //   Valid values: 'Learn', 'People', 'School', 'Admin', 'Other'
 //   Example: $category = 'Learn'  →  your module appears inside the "Learn" menu group.
 
-$version = '1.0.00';
+$version = '1.0.2';
 // ↑ Version string in MAJOR.MINOR.PATCH format.
 //   Shown in Admin → Module Admin.
 //   Does NOT trigger auto-updates — it is just a label.

@@ -77,121 +77,135 @@ echo '    </div>';
 echo '  </div>';
 echo '</div>';
 
-echo '<script>';
-echo '  (function(){';
-echo '    const ajaxBase = ' . json_encode($ajaxBase, JSON_UNESCAPED_UNICODE) . ';';
-echo '    const previewBase = ' . json_encode($previewBase, JSON_UNESCAPED_UNICODE) . ';';
-echo '    const yearGroupSelect = document.getElementById("yearGroupSelect");';
-echo '    const studentSelect = document.getElementById("studentSelect");';
-echo '    const archiveSelect = document.getElementById("archiveSelect");';
-echo '    const status = document.getElementById("cr-status");';
-echo '    const iframe = document.getElementById("bulletinIframe");';
-echo '    let currentStudent = null;';
+$loadingStudentsText = json_encode(__('Loading students...'), JSON_UNESCAPED_UNICODE);
+$loadingStudentText  = json_encode(__('Loading student...'), JSON_UNESCAPED_UNICODE);
+$ajaxBaseJs   = json_encode($ajaxBase, JSON_UNESCAPED_UNICODE);
+$previewBaseJs = json_encode($previewBase, JSON_UNESCAPED_UNICODE);
+$defaultYearGroupJs = ($defaultYearGroupID !== '' ? json_encode($defaultYearGroupID, JSON_UNESCAPED_UNICODE) : '""');
 
-echo '    function setStatus(msg, isErr){';
-echo '      status.textContent = msg || "";';
-echo '      status.style.color = isErr ? "#b00020" : "#666";';
-echo '    }';
+$js = <<<JS
+(function () {
+  var ajaxBase = {$ajaxBaseJs};
+  var previewBase = {$previewBaseJs};
+  var yearGroupSelect = document.getElementById("yearGroupSelect");
+  var studentSelect = document.getElementById("studentSelect");
+  var archiveSelect = document.getElementById("archiveSelect");
+  var status = document.getElementById("cr-status");
+  var iframe = document.getElementById("bulletinIframe");
+  var currentStudent = null;
 
-echo '    function buildPreviewUrl(data){';
-echo '      const archiveFolder = archiveSelect.value || "";';
-echo '      const yearGroupId = yearGroupSelect.value || "";';
-echo '      const params = new URLSearchParams();';
-echo '      params.set("matricule", data.matricule || "");';
-echo '      params.set("nom_prenoms", data.nom_prenoms || "");';
-echo '      params.set("parcours", data.parcours || "");';
-echo '      params.set("mail", data.mail || "");';
-echo '      params.set("lieu_de_stage", data.lieu_de_stage || "");';
-echo '      params.set("archiveFolder", archiveFolder);';
-echo '      params.set("studentId", data.studentId || "");';
-echo '      params.set("yearGroupId", yearGroupId);';
-echo '      return previewBase + "?" + params.toString();';
-echo '    }';
+  function setStatus(msg, isErr) {
+    status.textContent = msg || "";
+    status.style.color = isErr ? "#b00020" : "#666";
+  }
 
-echo '    async function loadStudents(){';
-echo '      const yearGroupId = yearGroupSelect.value;';
-echo '      if (!yearGroupId){';
-echo '        studentSelect.innerHTML = \'<option value="">Select...</option>\';';
-echo '        currentStudent = null;';
-echo '        iframe.src = previewBase;';
-echo '        return;';
-echo '      }';
-echo '      setStatus(' . json_encode(__('Loading students...'), JSON_UNESCAPED_UNICODE) . ');';
-echo '      studentSelect.innerHTML = \'<option value="">Loading...</option>\';';
-echo '      try {';
-echo '        const res = await fetch(ajaxBase + "studentsByYearGroup.php&yearGroupID=" + encodeURIComponent(yearGroupId));';
-echo '        if (!res.ok) {';
-echo '          const t = await res.text().catch(() => "");';
-echo '          throw new Error("HTTP " + res.status + (t ? ": " + t : ""));';
-echo '        }';
-echo '        const json = await res.json().catch(() => ({}));';
-echo '        const students = Array.isArray(json.students) ? json.students : [];';
-echo '        studentSelect.innerHTML = \'<option value="">Select...</option>\';';
-echo '        students.forEach(stu => {';
-echo '          const opt = document.createElement("option");';
-echo '          opt.value = stu.id;';
-echo '          opt.textContent = stu.name || stu.id;';
-echo '          studentSelect.appendChild(opt);';
-echo '        });';
-echo '        currentStudent = null;';
-echo '        iframe.src = previewBase;';
-echo '        if (students.length === 1){';
-echo '          studentSelect.value = students[0].id;';
-echo '          await loadStudentInfo();';
-echo '        }';
-echo '        setStatus("");';
-echo '      } catch (e){';
-echo '        setStatus(String(e.message || e) || "Error", true);';
-echo '        studentSelect.innerHTML = \'<option value="">Error</option>\';';
-echo '      }';
-echo '    }';
+  function buildPreviewUrl(data) {
+    var archiveFolder = archiveSelect.value || "";
+    var yearGroupId = yearGroupSelect.value || "";
+    var params = new URLSearchParams();
+    params.set("matricule", data.matricule || "");
+    params.set("nom_prenoms", data.nom_prenoms || "");
+    params.set("parcours", data.parcours || "");
+    params.set("mail", data.mail || "");
+    params.set("lieu_de_stage", data.lieu_de_stage || "");
+    params.set("archiveFolder", archiveFolder);
+    params.set("studentId", data.studentId || "");
+    params.set("yearGroupId", yearGroupId);
+    return previewBase + "?" + params.toString();
+  }
 
-echo '    async function loadStudentInfo(){';
-echo '      const personID = studentSelect.value;';
-echo '      if (!personID){';
-echo '        currentStudent = null;';
-echo '        iframe.src = previewBase;';
-echo '        return;';
-echo '      }';
-echo '      const yearGroupId = yearGroupSelect.value || "";';
-echo '      setStatus(' . json_encode(__('Loading student...'), JSON_UNESCAPED_UNICODE) . ');';
-echo '      try {';
-echo '        const url = ajaxBase + "studentInfo.php&personID=" + encodeURIComponent(personID) + "&yearGroupID=" + encodeURIComponent(yearGroupId);';
-echo '        const res = await fetch(url);';
-echo '        if (!res.ok) {';
-echo '          const t = await res.text().catch(() => "");';
-echo '          throw new Error("HTTP " + res.status + (t ? ": " + t : ""));';
-echo '        }';
-echo '        const json = await res.json().catch(() => ({}));';
-echo '        currentStudent = json.student || null;';
-echo '        if (currentStudent){';
-echo '          iframe.src = buildPreviewUrl(currentStudent);';
-echo '          setStatus("");';
-echo '        }';
-echo '      } catch (e){';
-echo '        setStatus(String(e.message || e) || "Error", true);';
-echo '      }';
-echo '    }';
+  function loadStudents() {
+    var yearGroupId = yearGroupSelect.value;
+    if (!yearGroupId) {
+      studentSelect.innerHTML = '<option value="">Select...</option>';
+      currentStudent = null;
+      iframe.src = previewBase;
+      return;
+    }
 
-echo '    yearGroupSelect.addEventListener("change", loadStudents);';
-echo '    studentSelect.addEventListener("change", loadStudentInfo);';
-echo '    archiveSelect.addEventListener("change", function(){';
-echo '      if (currentStudent) {';
-echo '        iframe.src = buildPreviewUrl(currentStudent);';
-echo '      } else {';
-echo '        const yearGroupId = yearGroupSelect.value || "";';
-echo '        const archiveFolder = archiveSelect.value || "";';
-echo '        const params = new URLSearchParams();';
-echo '        params.set("archiveFolder", archiveFolder);';
-echo '        params.set("yearGroupId", yearGroupId);';
-echo '        iframe.src = previewBase + "?" + params.toString();';
-echo '      }';
-echo '    });';
+    setStatus({$loadingStudentsText});
+    studentSelect.innerHTML = '<option value="">Loading...</option>';
 
-echo '    // Initial load';
-echo '    if (' . ($defaultYearGroupID !== '' ? json_encode($defaultYearGroupID, JSON_UNESCAPED_UNICODE) : '""') . '){';
-echo '      loadStudents();';
-echo '    }';
+    fetch(ajaxBase + "studentsByYearGroup.php&yearGroupID=" + encodeURIComponent(yearGroupId))
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (t) {
+            throw new Error("HTTP " + res.status + (t ? ": " + t : ""));
+          });
+        }
+        return res.json();
+      })
+      .then(function (json) {
+        var students = (json && Array.isArray(json.students)) ? json.students : [];
+        studentSelect.innerHTML = '<option value="">Select...</option>';
+        for (var i = 0; i < students.length; i++) {
+          var stu = students[i];
+          var opt = document.createElement("option");
+          opt.value = stu.id;
+          opt.textContent = stu.name || stu.id;
+          studentSelect.appendChild(opt);
+        }
+        currentStudent = null;
+        iframe.src = previewBase;
+        setStatus("");
+      })
+      .catch(function (e) {
+        setStatus(String(e && e.message ? e.message : e) || "Error", true);
+        studentSelect.innerHTML = '<option value="">Error</option>';
+      });
+  }
 
-echo '  })();';
-echo '</script>';
+  function loadStudentInfo() {
+    var personID = studentSelect.value;
+    if (!personID) {
+      currentStudent = null;
+      iframe.src = previewBase;
+      return;
+    }
+
+    var yearGroupId = yearGroupSelect.value || "";
+    setStatus({$loadingStudentText});
+
+    fetch(ajaxBase + "studentInfo.php&personID=" + encodeURIComponent(personID) + "&yearGroupID=" + encodeURIComponent(yearGroupId))
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (t) {
+            throw new Error("HTTP " + res.status + (t ? ": " + t : ""));
+          });
+        }
+        return res.json();
+      })
+      .then(function (json) {
+        currentStudent = json ? json.student : null;
+        if (currentStudent) {
+          iframe.src = buildPreviewUrl(currentStudent);
+          setStatus("");
+        }
+      })
+      .catch(function (e) {
+        setStatus(String(e && e.message ? e.message : e) || "Error", true);
+      });
+  }
+
+  yearGroupSelect.addEventListener("change", loadStudents);
+  studentSelect.addEventListener("change", loadStudentInfo);
+  archiveSelect.addEventListener("change", function () {
+    if (currentStudent) {
+      iframe.src = buildPreviewUrl(currentStudent);
+    } else {
+      var yearGroupId = yearGroupSelect.value || "";
+      var archiveFolder = archiveSelect.value || "";
+      var params = new URLSearchParams();
+      params.set("archiveFolder", archiveFolder);
+      params.set("yearGroupId", yearGroupId);
+      iframe.src = previewBase + "?" + params.toString();
+    }
+  });
+
+  if ({$defaultYearGroupJs}) {
+    loadStudents();
+  }
+})();
+JS;
+
+echo "<script>\\n{$js}\\n</script>";
