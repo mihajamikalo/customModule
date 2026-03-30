@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulletin de Validation — Prévisualisation</title>
+<style>
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    background: #f0f0f0;
+    padding: 20px;
+    color: #000;
+}
+
+/* ── Gibbon-style page wrapper ── */
+.gibbon-page-shell {
+    max-width: 1020px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.gibbon-topbar {
+    background: #4a4a4a;
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.gibbon-topbar span { opacity: 0.7; font-size: 11px; }
+.gibbon-breadcrumb {
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    padding: 6px 16px;
+    font-size: 11px;
+    color: #555;
+}
+.gibbon-breadcrumb a { color: #8B0000; text-decoration: none; }
+.gibbon-content { padding: 20px; }
+
+/* ═══════════════════════════════════════════════════════════
+   BULLETIN STYLES
+═══════════════════════════════════════════════════════════ */
+.bulletin-wrap { font-family: Arial, sans-serif; font-size: 12px; color: #000; }
+
+/* ── Header banner ── */
+.bul-header-title {
+    background-color: #8B0000;
+    color: #fff;
+    text-align: center;
+    padding: 7px 0 5px;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+.bul-header-title em {
+    display: block;
+    font-size: 12px;
+    font-style: italic;
+    font-weight: normal;
+    margin-top: 1px;
+}
+
+/* Editable title fields */
+.bul-header-title input[type="number"],
+.bul-header-title input[type="text"] {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed rgba(255,255,255,0.6);
+    color: #fff;
+    font-size: inherit;
+    font-weight: inherit;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+.bul-header-title input[type="number"] { width: 32px; }
+.bul-header-title input[type="text"]   { width: 120px; font-style: italic; font-size: 12px; }
+.bul-header-title input:focus { outline: none; border-bottom-color: #fff; }
+
+/* ── Info section ── */
+.bul-info-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+.bul-info-table td { padding: 3px 6px; vertical-align: middle; }
+.bul-info-label { font-weight: bold; white-space: nowrap; text-align: right; width: 160px; }
+.bul-info-input {
+    border: none;
+    border-bottom: 1px solid #999;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    width: 220px;
+    transition: border-color 0.15s;
+}
+.bul-info-input:focus { outline: none; border-bottom-color: #8B0000; }
+.bul-info-input.highlight {
+    background: #fffde7;
+    font-weight: bold;
+    border: 1px solid #f39c12;
+    border-radius: 2px;
+    width: 120px;
+    padding: 2px 8px;
+}
+.bul-photo-box {
+    border: 1px solid #8B0000;
+    width: 90px; height: 100px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #8B0000; font-style: italic; text-align: center;
+    flex-shrink: 0;
+}
+
+/* ── Separator ── */
+.bul-sep { border: none; border-top: 1px solid #ddd; margin: 6px 0 12px; }
+
+/* ── UE tables ── */
+.bul-ue-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.bul-ue-table th {
+    background-color: #8B0000;
+    color: #fff;
+    padding: 5px 8px;
+    font-style: italic;
+    font-size: 12px;
+    text-align: left;
+    border: 1px solid #a00;
+}
+.bul-ue-table th.th-comment { background-color: #c0392b; }
+.bul-ue-table th.th-center  { text-align: center; }
+.bul-ue-table td {
+    border: 1px solid #ccc;
+    padding: 3px 6px;
+    vertical-align: middle;
+}
+.bul-ue-table td.tc { text-align: center; }
+.bul-ue-table tbody tr:nth-child(odd) td { background: #fafafa; }
+.bul-ue-table tbody tr:nth-child(even) td { background: #fff; }
+
+/* ── Input fields inside table ── */
+.inp-credits, .inp-note {
+    width: 56px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    padding: 2px 4px;
+    text-align: center;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    background: #fff9f9;
+    transition: border-color 0.15s, background 0.15s;
+}
+.inp-credits:focus, .inp-note:focus {
+    border-color: #8B0000;
+    background: #fff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(139,0,0,0.12);
+}
+.inp-comment {
+    width: 99%;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    padding: 2px 4px;
+    font-size: 11px;
+    font-family: Arial, sans-serif;
+}
+.inp-comment:focus { border-color: #8B0000; outline: none; }
+.inp-sm {
+    width: 40px;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    padding: 2px 3px;
+    text-align: center;
+    font-size: 11px;
+    font-family: Arial, sans-serif;
+}
+.inp-sm:focus { border-color: #8B0000; outline: none; }
+
+/* ── Summary row ── */
+.bul-summary-row td {
+    color: #8B0000;
+    font-weight: bold;
+    font-size: 12px;
+    background: #fff !important;
+    border-top: 2px solid #8B0000;
+}
+.bul-summary-label { text-align: right; font-size: 11px; }
+.bul-total-val { font-weight: bold; color: #8B0000; }
+
+/* ── Footer ── */
+.bul-footer { margin-top: 14px; text-align: center; }
+.bul-credits-line {
+    font-weight: bold;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.bul-display-val {
+    border-bottom: 2px solid #000;
+    min-width: 60px;
+    padding: 0 8px;
+    display: inline-block;
+    text-align: center;
+    font-weight: bold;
+}
+.bul-moy-gen {
+    color: #8B0000;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 4px 0;
+}
+.bul-moy-ue { font-size: 12px; color: #000; }
+.bul-validation { font-size: 11px; }
+
+/* ── Submit bar ── */
+.bul-submit-bar { margin-top: 20px; text-align: center; padding-bottom: 10px; }
+.bul-btn {
+    background: #8B0000;
+    color: #fff;
+    border: none;
+    padding: 10px 32px;
+    font-size: 13px;
+    font-weight: bold;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    font-family: Arial, sans-serif;
+    transition: background 0.15s;
+}
+.bul-btn:hover { background: #6a0000; }
+
+/* ── Legend tooltip ── */
+.field-hint {
+    display: inline-block;
+    background: #fffde7;
+    border: 1px solid #f39c12;
+    border-radius: 3px;
+    font-size: 10px;
+    color: #7d5e00;
+    padding: 1px 5px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     GIBBON SHELL (simulation of how this looks inside Gibbon)
+════════════════════════════════════════════════════════════════════════ -->
+<div class="gibbon-page-shell">
+
+  <!-- Simulated Gibbon top bar -->
+  <div class="gibbon-topbar">
+    <strong>Custom Rapport</strong>
+    <span>— Module personnalisé</span>
+  </div>
+
+  <!-- Breadcrumb -->
+  <div class="gibbon-breadcrumb">
+    <a href="#">Custom Rapport</a> &rsaquo; Générer Bulletin
+  </div>
+
+  <!-- Page content -->
+  <div class="gibbon-content">
+
+    <div class="bulletin-wrap">
+    <form id="bulletinForm" method="post" action="bulletin_generateProcess.php">
+
+      <!-- ══════════════════════════════════════════════════════════
+           HEADER BANNER
+      ═══════════════════════════════════════════════════════════ -->
+      <div class="bul-header-title">
+        BULLETIN DE VALIDATION - SEMESTRE
+        <input type="number" name="semestre" id="semestre" value="1" min="1" max="6"
+               oninput="document.getElementById('footer-sem').textContent=this.value">
+        <em>
+          Année académique&nbsp;
+          <input type="text" name="annee" id="annee" value="2025 - 2026">
+        </em>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           STUDENT INFO
+      ═══════════════════════════════════════════════════════════ -->
+      <table class="bul-info-table">
+        <tr>
+          <!-- Logos -->
+          <td style="width:70px;vertical-align:top;padding-top:8px;">
+            <div style="font-weight:bold;font-size:15px;color:#8B0000;letter-spacing:-0.5px;">ESC<span style="font-size:11px;">m</span></div>
+            <div style="font-size:8px;color:#555;line-height:1.2;">BUSINESS SCHOOL</div>
+            <div style="margin-top:8px;">
+              <span style="font-weight:bold;font-size:13px;color:#c0392b;font-style:italic;">IDRAC</span><sup style="font-size:8px;">®</sup>
+            </div>
+            <div style="font-size:8px;color:#555;line-height:1.2;">BUSINESS SCHOOL</div>
+          </td>
+
+          <!-- Fields -->
+          <td style="padding-left:24px;">
+            <table style="border-collapse:collapse;">
+              <tr>
+                <td class="bul-info-label">MATRICULE :</td>
+                <td>
+                  <input type="text" class="bul-info-input highlight"
+                         name="matricule" id="matricule" placeholder="E25-001">
+                </td>
+              </tr>
+              <tr>
+                <td class="bul-info-label">NOM ET PRENOMS :</td>
+                <td><input type="text" class="bul-info-input" name="nom_prenoms" id="nom_prenoms" placeholder="Nom Prénom"></td>
+              </tr>
+              <tr>
+                <td class="bul-info-label">PARCOURS :</td>
+                <td><input type="text" class="bul-info-input" name="parcours" id="parcours" placeholder="B1: Classe_B1_G1"></td>
+              </tr>
+              <tr>
+                <td class="bul-info-label">MAIL :</td>
+                <td><input type="email" class="bul-info-input" name="mail" id="mail" placeholder="etudiant@escm.mg"></td>
+              </tr>
+              <tr>
+                <td class="bul-info-label">LIEU DE STAGE :</td>
+                <td><input type="text" class="bul-info-input" name="lieu_de_stage" id="lieu_de_stage" placeholder="Entreprise..."></td>
+              </tr>
+            </table>
+          </td>
+
+          <!-- Photo -->
+          <td style="vertical-align:top;padding-top:6px;">
+            <div class="bul-photo-box">Photo<br>étudiant</div>
+          </td>
+        </tr>
+      </table>
+      <hr class="bul-sep">
+
+      <!-- ══════════════════════════════════════════════════════════
+           UE TABLES — JS builds these from the config below
+      ═══════════════════════════════════════════════════════════ -->
+      <div id="ue-container"></div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           FOOTER TOTALS
+      ═══════════════════════════════════════════════════════════ -->
+      <div class="bul-footer">
+        <div class="bul-credits-line">
+          CREDITS VALIDES (SEMESTRE <span id="footer-sem">1</span>) :
+          <span class="bul-display-val" id="footer-credits">–</span>
+          /30
+        </div>
+        <div class="bul-moy-gen">
+          Moyenne Générale :&nbsp;<span id="footer-moy-gen">–</span>/20
+        </div>
+        <div class="bul-moy-ue">
+          Moyenne des Unités d'Enseignement :&nbsp;<span id="footer-moy-ue">–</span>/20
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           SUBMIT
+      ═══════════════════════════════════════════════════════════ -->
+      <div class="bul-submit-bar">
+        <button type="submit" class="bul-btn">⬇ Générer le Bulletin PDF</button>
+      </div>
+
+      <!-- Hidden fields used by the module backend -->
+      <input type="hidden" name="archiveFolder" id="archiveFolder" value="">
+      <input type="hidden" name="studentId" id="studentId" value="">
+      <input type="hidden" name="yearGroupId" id="yearGroupId" value="">
+
+      <!-- Ensure Gibbon routes the POST through index.php?q=... -->
+      <script>
+      (function setGenerateAction(){
+        try {
+          const form = document.getElementById('bulletinForm');
+          if (!form) return;
+          const path = window.location.pathname || '';
+          const marker = '/modules/';
+          const idx = path.indexOf(marker);
+          if (idx === -1) return;
+          // Extract encoded module folder name from: /modules/<moduleFolder>/bulletin_preview.html
+          const after = path.slice(idx + marker.length);
+          const m = after.match(/^(.*)\/bulletin_preview\.html$/i);
+          if (!m) return;
+          const moduleFolder = m[1]; // already URL-encoded in pathname
+          const basePath = path.slice(0, idx); // e.g. /gibbon
+          const action = window.location.origin + basePath + '/index.php?q=/modules/' + moduleFolder + '/bulletin_generateProcess.php';
+          form.setAttribute('action', action);
+        } catch (e) {
+          // Fail silently; fallback action remains bulletin_generateProcess.php
+        }
+      })();
+      </script>
+
+    </form>
+    </div><!-- .bulletin-wrap -->
+
+  </div><!-- .gibbon-content -->
+</div><!-- .gibbon-page-shell -->
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     DATA CONFIGURATION
+     This mirrors the $ues PHP array from generateRapport.php.
+     In production this would be json_encoded by Twig.
+════════════════════════════════════════════════════════════════════════ -->
+<script>
+const UE_CONFIG = [
+  {
+    id: 'mcc',
+    name: 'MARKETING COMMERCE COMMUNICATION',
+    courses: [
+      { id: 'mcc_1', name: 'Elaborer un diagnostic marketing',    max_credits: 2 },
+      { id: 'mcc_2', name: 'Posture et prise de parole',           max_credits: 1 },
+      { id: 'mcc_3', name: 'Gestion de la relation client',        max_credits: 2 },
+      { id: 'mcc_4', name: 'Outils de la performance commerciale', max_credits: 2 },
+    ]
+  },
+  {
+    id: 'fin',
+    name: 'FINANCE CDG TQG',
+    courses: [
+      { id: 'fin_1', name: 'Lecture et analyse de documents comptables', max_credits: 2 },
+    ]
+  },
+  {
+    id: 'acp',
+    name: "ANALYSE ET CONCEPTION D'UN PLAN DE COMMUNICATION",
+    courses: [
+      { id: 'acp_1', name: 'Théories de la com',    max_credits: 2 },
+      { id: 'acp_2', name: 'Fondamentaux de la com', max_credits: 2 },
+      { id: 'acp_3', name: 'Identité visuelle',      max_credits: 2 },
+    ]
+  },
+  {
+    id: 'mho',
+    name: 'MANAGEMENT DES HOMMES DES ORGANISATIONS ET DES PROCESS',
+    courses: [
+      { id: 'mho_1', name: 'Management de projet initial (méthodologie et outils)', max_credits: 2 },
+      { id: 'mho_2', name: 'Maitrise des outils informatiques',                    max_credits: 1 },
+      { id: 'mho_3', name: 'Communication écrite "Voltaire"',                       max_credits: 1 },
+      { id: 'mho_4', name: 'Méthodologie de travail',                               max_credits: 1 },
+    ]
+  },
+  {
+    id: 'sed',
+    name: 'STRATÉGIE ECONOMIE DROIT',
+    courses: [
+      { id: 'sed_1', name: 'Economie, simple et basique', max_credits: 2 },
+    ]
+  },
+  {
+    id: 'lcc',
+    name: 'LANGUES CULTURES CIVILISATIONS',
+    courses: [
+      { id: 'lcc_1', name: 'Business English',     max_credits: 2 },
+      { id: 'lcc_2', name: 'Communication skills', max_credits: 2 },
+    ]
+  },
+  {
+    id: 'dtp',
+    name: 'DOSSIERS ET TRAVAUX PROFESSIONNELS',
+    courses: [
+      { id: 'dtp_1', name: 'Dossier Marketing', max_credits: 4 },
+    ]
+  },
+];
+
+/* ──────────────────────────────────────────────────────────────────────────
+   BUILD DOM — Generate all UE tables from UE_CONFIG
+   (In Gibbon version this is done by Twig's {% for ue in ues %} loop)
+────────────────────────────────────────────────────────────────────────── */
+function buildTables() {
+  const container = document.getElementById('ue-container');
+  container.innerHTML = '';
+
+  UE_CONFIG.forEach(ue => {
+    // Build course rows
+    const courseRows = ue.courses.map(course => `
+      <tr>
+        <td style="width:42%;">${course.name}</td>
+
+        <!-- CREDITS INPUT: 0 to max_credits -->
+        <td class="tc" style="width:8%;">
+          <input type="number"
+                 class="inp-credits"
+                 name="credits_${course.id}"
+                 id="credits_${course.id}"
+                 min="0" max="${course.max_credits}" step="1"
+                 placeholder="0"
+                 title="Crédits (0 à ${course.max_credits})"
+                 data-ue="${ue.id}"
+                 data-max="${course.max_credits}"
+                 oninput="recalcUE('${ue.id}')">
+        </td>
+
+        <!-- NOTE INPUT: 0.00 to 20.00 -->
+        <td class="tc" style="width:8%;">
+          <input type="number"
+                 class="inp-note"
+                 name="note_${course.id}"
+                 id="note_${course.id}"
+                 min="0" max="20" step="0.01"
+                 placeholder="0.00"
+                 title="Note sur 20"
+                 data-ue="${ue.id}"
+                 data-max="${course.max_credits}"
+                 oninput="recalcUE('${ue.id}')">
+        </td>
+
+        <!-- COMMENTAIRE -->
+        <td style="width:27%;">
+          <input type="text" class="inp-comment"
+                 name="comment_${course.id}" placeholder="">
+        </td>
+
+        <!-- ABS -->
+        <td class="tc" style="width:7%;">
+          <input type="text" class="inp-sm"
+                 name="abs_${course.id}" value="-">
+        </td>
+
+        <!-- RETARD -->
+        <td class="tc" style="width:8%;">
+          <input type="text" class="inp-sm"
+                 name="retard_${course.id}" value="0:00" style="width:48px;">
+        </td>
+      </tr>
+    `).join('');
+
+    const table = document.createElement('table');
+    table.className = 'bul-ue-table';
+    table.id = 'ue-table-' + ue.id;
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>${ue.name}</th>
+          <th class="th-center">Crédits</th>
+          <th class="th-center">Notes</th>
+          <th class="th-comment th-center">Commentaire</th>
+          <th class="th-center">Abs</th>
+          <th class="th-center">Retard</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${courseRows}
+        <tr class="bul-summary-row">
+          <td class="bul-summary-label">Nombre de crédits obtenus / note moyenne</td>
+          <td class="tc"><span id="total-credits-${ue.id}" class="bul-total-val">–/–</span></td>
+          <td class="tc"><span id="total-note-${ue.id}" class="bul-total-val">–</span></td>
+          <td colspan="3" class="bul-validation">
+            <span id="validation-${ue.id}"></span>
+          </td>
+        </tr>
+      </tbody>
+    `;
+    container.appendChild(table);
+  });
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   RECALC UE — fires on every credits/note input change
+────────────────────────────────────────────────────────────────────────── */
+function recalcUE(ueId) {
+  const ue = UE_CONFIG.find(u => u.id === ueId);
+  if (!ue) return;
+
+  let earned   = 0, maxC = 0, wSum = 0, cSum = 0;
+
+  ue.courses.forEach(c => {
+    const cred = parseFloat(document.getElementById('credits_' + c.id)?.value || 0) || 0;
+    const note = parseFloat(document.getElementById('note_'    + c.id)?.value || 0) || 0;
+    earned += cred;
+    maxC   += c.max_credits;
+    wSum   += cred * note;
+    cSum   += cred;
+  });
+
+  const avg    = cSum > 0 ? (wSum / cSum).toFixed(2) : '–';
+  const valid  = cSum > 0 && parseFloat(avg) >= 10 && earned >= maxC;
+
+  document.getElementById('total-credits-' + ueId).textContent = earned + '/' + maxC;
+  document.getElementById('total-note-'    + ueId).textContent = avg;
+
+  const badge = document.getElementById('validation-' + ueId);
+  badge.textContent = valid ? 'Validé' : 'Non Validé';
+  badge.style.color = valid ? '#000' : '#c0392b';
+  badge.style.fontWeight = 'normal';
+
+  recalcFooter();
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   RECALC FOOTER — aggregates all UEs
+────────────────────────────────────────────────────────────────────────── */
+function recalcFooter() {
+  let totalEarned = 0, wTotal = 0, cTotal = 0, ueAvgSum = 0, ueN = 0;
+
+  UE_CONFIG.forEach(ue => {
+    let ueE = 0, ueW = 0, ueC = 0;
+    ue.courses.forEach(c => {
+      const cred = parseFloat(document.getElementById('credits_' + c.id)?.value || 0) || 0;
+      const note = parseFloat(document.getElementById('note_'    + c.id)?.value || 0) || 0;
+      ueE += cred; ueW += cred * note; ueC += cred;
+    });
+    totalEarned += ueE; wTotal += ueW; cTotal += ueC;
+    if (ueC > 0) { ueAvgSum += ueW / ueC; ueN++; }
+  });
+
+  document.getElementById('footer-credits').textContent =
+    cTotal > 0 ? totalEarned : '–';
+  document.getElementById('footer-moy-gen').textContent =
+    cTotal > 0 ? (wTotal / cTotal).toFixed(2) : '–';
+  document.getElementById('footer-moy-ue').textContent =
+    ueN > 0    ? (ueAvgSum / ueN).toFixed(2) : '–';
+}
+
+// ── Prefill fields from URL parameters / injected data ──
+(function initBulletinPrefill() {
+  const params = new URLSearchParams(window.location.search);
+  const data = (window.__BULLETIN_DATA__ && typeof window.__BULLETIN_DATA__ === 'object')
+    ? window.__BULLETIN_DATA__
+    : {};
+
+  const pick = (key, fallback = '') => {
+    const v = params.get(key);
+    if (v !== null && v !== '') return v;
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      const dv = data[key];
+      if (dv !== null && dv !== '') return dv;
+    }
+    return fallback;
+  };
+
+  const setById = (id, key) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = pick(key, el.value || '');
+  };
+
+  setById('matricule', 'matricule');
+  setById('nom_prenoms', 'nom_prenoms');
+  setById('parcours', 'parcours');
+  setById('mail', 'mail');
+  setById('lieu_de_stage', 'lieu_de_stage');
+
+  setById('archiveFolder', 'archiveFolder');
+  setById('studentId', 'studentId');
+  setById('yearGroupId', 'yearGroupId');
+
+  // Semestre / footer sync
+  const semEl = document.getElementById('semestre');
+  if (semEl) {
+    const sem = pick('semestre', semEl.value || '1');
+    semEl.value = sem;
+    const footerSem = document.getElementById('footer-sem');
+    if (footerSem) footerSem.textContent = sem;
+  }
+
+  // Academic year header
+  const anneeEl = document.getElementById('annee');
+  if (anneeEl) {
+    anneeEl.value = pick('annee', anneeEl.value || '');
+  }
+})();
+
+// ── Initialise on load ──
+buildTables();
+recalcFooter();
+</script>
+</body>
+</html>
