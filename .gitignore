@@ -1,0 +1,10 @@
+# OS files
+.DS_Store
+
+# Accidental nested repo folder (contains only .git)
+customModule/
+
+# Common local artifacts
+vendor/
+node_modules/
+
