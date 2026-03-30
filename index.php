@@ -175,7 +175,18 @@ echo '    }';
 
 echo '    yearGroupSelect.addEventListener("change", loadStudents);';
 echo '    studentSelect.addEventListener("change", loadStudentInfo);';
-echo '    archiveSelect.addEventListener("change", function(){ if (currentStudent) iframe.src = buildPreviewUrl(currentStudent); });';
+echo '    archiveSelect.addEventListener("change", function(){';
+echo '      if (currentStudent) {';
+echo '        iframe.src = buildPreviewUrl(currentStudent);';
+echo '      } else {';
+echo '        const yearGroupId = yearGroupSelect.value || "";';
+echo '        const archiveFolder = archiveSelect.value || "";';
+echo '        const params = new URLSearchParams();';
+echo '        params.set("archiveFolder", archiveFolder);';
+echo '        params.set("yearGroupId", yearGroupId);';
+echo '        iframe.src = previewBase + "?" + params.toString();';
+echo '      }';
+echo '    });';
 
 echo '    // Initial load';
 echo '    if (' . ($defaultYearGroupID !== '' ? json_encode($defaultYearGroupID, JSON_UNESCAPED_UNICODE) : '""') . '){';

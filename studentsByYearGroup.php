@@ -2,7 +2,9 @@
 include '../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 
-$moduleFolder = $session->get('module');
+// gibbon.php provides $gibbon; in some contexts $session may not be set.
+$session = $session ?? ($gibbon->session ?? null);
+$moduleFolder = $session ? $session->get('module') : '';
 $currentUrl = '/modules/' . $moduleFolder . '/studentsByYearGroup.php';
 
 header('Content-Type: application/json; charset=utf-8');
