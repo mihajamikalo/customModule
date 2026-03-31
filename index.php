@@ -208,4 +208,4 @@ $js = <<<JS
 })();
 JS;
 
-echo "<script>\\n{$js}\\n</script>";
+echo "<script>\n{$js}\n</script>";
